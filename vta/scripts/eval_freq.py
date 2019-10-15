@@ -97,7 +97,7 @@ else:
         line = "hls_clk\tstatus\test\tbrams\tdsps\tffs\tluts"
         logfd.write(line+"\n")
 
-        HLS_CLK_list = [7, 8]
+        HLS_CLK_list = [1, 2, 3, 4, 5, 6, 7, 8]
 
         sstring_HLSCLK = "self.fpga_per = "
         rstring_HLSCLK = "self.fpga_per = "
@@ -157,11 +157,13 @@ else:
                 #if process.wait() != 0:
                 #    print("Severe Error executing command: " + command + ". Aborting this evaluation...\n")
                 #    continue
-                line = str(tr) + "\t" + status + "\t" + estimated + "\t" +  brams + "\t" + dsps + "\t" + ffs + "\t" + luts
-                logfd.write(line+"\n")
             else:
                 print("INFO: Skipping evaluation " + evaluation + " on PYNQs\n")
-    print("6\n")
+
+            print("6\n")
+            line = str(tr) + "\t" + status + "\t" + estimated + "\t" +  brams + "\t" + dsps + "\t" + ffs + "\t" + luts
+            logfd.write(line+"\n")
+    print("7\n")
 
     if (RUN_SYN == 1):
         logfd.close()
