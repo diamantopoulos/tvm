@@ -29,8 +29,38 @@ import os.path
 import fileinput
 from shutil import copyfile
 
-LOAD_SESSION = 0
 
+
+def check(file_to_search, string_to_find):
+    if (not os.path.exists(file_to_search)):
+        print("ERROR: file " + file_to_search + " does not exist, skipping...")
+        return False
+    else:
+        with open(file_to_search) as f:
+            datafile = f.readlines()
+            found = False  # This isn't really necessary
+            for line in datafile:
+                if string_to_find in line:
+                    # found = True # Not necessary
+                    return True
+            return False  # Because you finished the search without finding
+
+def parse_hls_syn(report_file):
+    command = "cat " + syn_log + "  | grep -A 3 Estimated | tail -n 2 | head -n 1 |  awk '{print $4}' | sed 's/.$//'"
+    #print(command)
+    estimated = subprocess.getoutput(command)
+    command = "cat " + syn_log + "  | grep -A 3 Total | head -n 1 | awk '{print $3}' | sed 's/.$//'"
+    brams = subprocess.getoutput(command)
+    command = "cat " + syn_log + "  | grep -A 3 Total | head -n 1 | awk '{print $4}' | sed 's/.$//'"
+    dsps = subprocess.getoutput(command)
+    command = "cat " + syn_log + "  | grep -A 3 Total | head -n 1 | awk '{print $5}' | sed 's/.$//'"
+    ffs = subprocess.getoutput(command)
+    command = "cat " + syn_log + "  | grep -A 3 Total | head -n 1 | awk '{print $6}' | sed 's/.$//'"
+    luts = subprocess.getoutput(command)
+    return [estimated, brams, dsps, ffs, luts]
+
+
+LOAD_SESSION = 0
 PLOT_ENABLE = 1
 
 savesessionfile = 'globalsave.npy'
@@ -43,22 +73,30 @@ else:
     RUN_SIM = 1
     RUN_VHLS = 0
 
-    filein = "/home/did/tvm_did/vta/python/vta/pkg_config.py"
-    fileout = "/home/did/tvm_did/vta/python/vta/pkg_config_replaced.py"
+    tvm_root = os.environ.get("TVM_HOME")
+    filein = tvm_root + "/vta/python/vta/pkg_config.py"
+    fileout = tvm_root + "/vta/python/vta/pkg_config_replaced.py"
     log_file_path = "/tmp/run.log"
-    syn_log = "./hw/hlsBLSTM_xcku060-ffva1156-2-e/blstm/syn/report/Single_Kernel_BLSTM_csynth.rpt"
+    syn_log = tvm_root + "/vta/build/hardware/xilinx/hls/pynq_1x16_i8w8a32_15_15_18_17/vta_sim/soln/syn/report/vta_csynth.rpt"
+    pynq_images_dir = tvm_root + "/vta/build/hardware/xilinx/vivado/pynq_1x16_i8w8a32_15_15_18_17/Images/"
+    subprocess.getoutput("mkdir -p " + pynq_images_dir)
+    pynq_image_path = tvm_root + "/vta/build/hardware/xilinx/vivado/pynq_1x16_i8w8a32_15_15_18_17/export/"
+    pynq_image_in = pynq_image_path + "vta.bit"
+
     f = open(filein,'r')
     filedata = f.read()
     f.close()
-
+    print("1\n")
     if (RUN_SIM == 1):
         logfd = open("./run.log",'w')
+        line = "hls_clk\tstatus\test\tbrams\tdsps\tffs\tluts"
+        logfd.write(line+"\n")
 
-        HLS_CLK_list = [2, 3]
+        HLS_CLK_list = [7]
 
         sstring_HLSCLK = "self.fpga_per = "
         rstring_HLSCLK = "self.fpga_per = "
-
+        print("2\n")
 
         for tr in HLS_CLK_list:
             search_string = sstring_HLSCLK
@@ -70,11 +108,28 @@ else:
             f.write(newdata)
             f.close()
             copyfile(fileout, filein)
+            print("3\n")
 
             if (RUN_SIM == 1):
-                command = "cd /home/did/tvm_did/vta/hardware/xilinx/hw/ && make clean && make cleanall && time make && python3 /home/did/tvm_did/vta/tests/python/integration/test_benchmark_topi_conv2d.py > " + log_file_path
+                command = "cd " + tvm_root + "/vta/hardware/xilinx && make clean && make cleanall && make ip && time make && python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > " + log_file_path
                 print(command)
-                #subprocess.getoutput(command)
+                subprocess.getoutput(command)
+                print("4\n")
+
+                if check(log_file_path, "BITSTREAM ERROR"):
+                    status = 'FAIL'
+                    estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0';
+                else:
+                    status = ' OK '
+                    [estimated, brams, dsps, ffs, luts] = parse_hls_syn(syn_log)
+                    pynq_image_out = pynq_images_dir + "pynq_1x16_i8w8a32_15_15_18_17_FREQ-200_TARGET-" + str(tr) + "_vta.bin"
+                    command = "cp " + pynq_image_in + " " + pynq_image_out
+                    subprocess.getoutput(command)
+                print("5\n")
+
+                line = str(tr) + "\t" + status + "\t" + estimated + "\t" +  brams + "\t" + dsps + "\t" + ffs + "\t" + luts
+                logfd.write(line+"\n")
+    print("6\n")
 
     if (RUN_VHLS == 1):
         logfd.close()
