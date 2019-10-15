@@ -72,7 +72,7 @@ if (LOAD_SESSION == 1):
 else:
     RUN_SIM = 1
     RUN_SYN  = True
-    RUN_EVAL = True
+    RUN_EVAL = False
 
     tvm_root = os.environ.get("TVM_HOME")
     vta_config = "pynq_1x16_i8w8a32_15_15_18_17"
@@ -81,7 +81,8 @@ else:
     fileout = tvm_root + "/vta/python/vta/pkg_config_replaced.py"
     log_file_path = "/tmp/run.log"
     syn_log = tvm_root + "/vta/build/hardware/xilinx/hls/" + vta_config + "/vta_sim/soln/syn/report/vta_csynth.rpt"
-    pynq_images_dir = tvm_root + "/vta/build/hardware/xilinx/vivado/" + vta_config + "/Images/"
+    pynq_images_dir = tvm_root + "/vta/Images/"
+    print(pynq_images_dir)
     pathlib.Path(pynq_images_dir).mkdir(parents=True, exist_ok=True)
     pynq_image_path = tvm_root + "/vta/build/hardware/xilinx/vivado/" + vta_config + "/export/"
     pathlib.Path(pynq_image_path).mkdir(parents=True, exist_ok=True)
@@ -96,7 +97,7 @@ else:
         line = "hls_clk\tstatus\test\tbrams\tdsps\tffs\tluts"
         logfd.write(line+"\n")
 
-        HLS_CLK_list = [7]
+        HLS_CLK_list = [7, 8]
 
         sstring_HLSCLK = "self.fpga_per = "
         rstring_HLSCLK = "self.fpga_per = "
