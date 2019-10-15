@@ -137,11 +137,11 @@ else:
                     else:
                         status = ' OK '
                         [estimated, brams, dsps, ffs, luts] = parse_hls_syn(syn_log)
-                        copyfile(pynq_image_out, pynq_image_in) #copyfile is oppsite to cp
+                        copyfile(pynq_image_in, pynq_image_out)
                     print("5\n")
                 else:
                     print("WARNING: file " + pynq_image_out + " was found already. Skipping generation.")
-                    copyfile(pynq_image_in, pynq_image_out) # opposite copy
+                    copyfile(pynq_image_out, pynq_image_in) # opposite copy
                     status = 'FOUND'; estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0';
             else:
                 print("INFO: Skipping synthesis of " + evaluation + " with Vivado\n")
