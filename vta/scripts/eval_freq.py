@@ -28,7 +28,7 @@ import numpy as np
 import os.path
 import fileinput
 from shutil import copyfile
-
+import pathlib
 
 
 def check(file_to_search, string_to_find):
@@ -71,16 +71,20 @@ if (LOAD_SESSION == 1):
 
 else:
     RUN_SIM = 1
-    RUN_VHLS = 0
+    RUN_SYN  = True
+    RUN_EVAL = True
 
     tvm_root = os.environ.get("TVM_HOME")
+    vta_config = "pynq_1x16_i8w8a32_15_15_18_17"
+
     filein = tvm_root + "/vta/python/vta/pkg_config.py"
     fileout = tvm_root + "/vta/python/vta/pkg_config_replaced.py"
     log_file_path = "/tmp/run.log"
-    syn_log = tvm_root + "/vta/build/hardware/xilinx/hls/pynq_1x16_i8w8a32_15_15_18_17/vta_sim/soln/syn/report/vta_csynth.rpt"
-    pynq_images_dir = tvm_root + "/vta/build/hardware/xilinx/vivado/pynq_1x16_i8w8a32_15_15_18_17/Images/"
-    subprocess.getoutput("mkdir -p " + pynq_images_dir)
-    pynq_image_path = tvm_root + "/vta/build/hardware/xilinx/vivado/pynq_1x16_i8w8a32_15_15_18_17/export/"
+    syn_log = tvm_root + "/vta/build/hardware/xilinx/hls/" + vta_config + "/vta_sim/soln/syn/report/vta_csynth.rpt"
+    pynq_images_dir = tvm_root + "/vta/build/hardware/xilinx/vivado/" + vta_config + "/Images/"
+    pathlib.Path(pynq_images_dir).mkdir(parents=True, exist_ok=True)
+    pynq_image_path = tvm_root + "/vta/build/hardware/xilinx/vivado/" + vta_config + "/export/"
+    pathlib.Path(pynq_image_path).mkdir(parents=True, exist_ok=True)
     pynq_image_in = pynq_image_path + "vta.bit"
 
     f = open(filein,'r')
@@ -110,26 +114,53 @@ else:
             copyfile(fileout, filein)
             print("3\n")
 
-            if (RUN_SIM == 1):
-                command = "cd " + tvm_root + "/vta/hardware/xilinx && make clean && make cleanall && make ip && time make && python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > " + log_file_path
+
+            evaluation = vta_config + "_FREQ-200_TARGET-" + str(tr)
+            pynq_image_out = pynq_images_dir + evaluation + "_vta.bit"
+
+            if (RUN_SYN):
+                print("INFO: Synthesis of " + evaluation + " with Vivado...\n")
+                if (not os.path.exists(pynq_image_out)):
+                    print("WARNING: file " + pynq_image_out + " does not exist. Generating it...")
+
+                    command = "cd " + tvm_root + "/vta/hardware/xilinx && make clean && make cleanall && make ip && time make > " + log_file_path
+                    print(command)
+                    subprocess.getoutput(command)
+                    #process = subprocess.Popen(command, stderr=subprocess.STDOUT)
+                    #if process.wait() != 0:
+                    #    print("Severe Error executing command: " + command + ". Aborting this evaluation...\n")
+                    #    continue
+                    print("4\n")
+                    if check(log_file_path, "BITSTREAM ERROR"):
+                        status = 'FAIL'; estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0';
+                    else:
+                        status = ' OK '
+                        [estimated, brams, dsps, ffs, luts] = parse_hls_syn(syn_log)
+                        copyfile(pynq_image_out, pynq_image_in) #copyfile is oppsite to cp
+                    print("5\n")
+                else:
+                    print("WARNING: file " + pynq_image_out + " was found already. Skipping generation.")
+                    copyfile(pynq_image_in, pynq_image_out) # opposite copy
+                    status = 'FOUND'; estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0';
+            else:
+                print("INFO: Skipping synthesis of " + evaluation + " with Vivado\n")
+                status = 'SKIP'; estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0';
+
+
+            if (RUN_EVAL):
+                print("INFO: Evaluation of " + evaluation + " on PYNQs...\n")
+                command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + log_file_path
                 print(command)
                 subprocess.getoutput(command)
-                print("4\n")
-
-                if check(log_file_path, "BITSTREAM ERROR"):
-                    status = 'FAIL'
-                    estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0';
-                else:
-                    status = ' OK '
-                    [estimated, brams, dsps, ffs, luts] = parse_hls_syn(syn_log)
-                    pynq_image_out = pynq_images_dir + "pynq_1x16_i8w8a32_15_15_18_17_FREQ-200_TARGET-" + str(tr) + "_vta.bin"
-                    command = "cp " + pynq_image_in + " " + pynq_image_out
-                    subprocess.getoutput(command)
-                print("5\n")
-
+                #process = subprocess.Popen(command, stderr=subprocess.STDOUT)
+                #if process.wait() != 0:
+                #    print("Severe Error executing command: " + command + ". Aborting this evaluation...\n")
+                #    continue
                 line = str(tr) + "\t" + status + "\t" + estimated + "\t" +  brams + "\t" + dsps + "\t" + ffs + "\t" + luts
                 logfd.write(line+"\n")
+            else:
+                print("INFO: Skipping evaluation " + evaluation + " on PYNQs\n")
     print("6\n")
 
-    if (RUN_VHLS == 1):
+    if (RUN_SYN == 1):
         logfd.close()
