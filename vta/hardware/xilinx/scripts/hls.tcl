@@ -92,6 +92,7 @@ add_files -tb $test_dir/test_lib.cc -cflags $cflags
 open_solution "soln"
 init_design
 csim_design -clean
+csynth_design
 close_project
 
 # Generate fetch stage

@@ -89,7 +89,7 @@ else:
     pynq_image_in = pynq_image_path + "vta.bit"
 
     f = open(filein,'r')
-    filedata = f.read()
+    filedata = newdata = f.read()
     f.close()
     print("1\n")
     if (RUN_SIM == 1):
@@ -97,7 +97,7 @@ else:
         line = "hls_clk\tstatus\test\tbrams\tdsps\tffs\tluts"
         logfd.write(line+"\n")
 
-        HLS_CLK_list = [1, 2, 3, 4, 5, 6, 7, 8]
+        HLS_CLK_list = [3, 4, 5, 6, 7, 8, 9]
 
         sstring_HLSCLK = "self.fpga_per = "
         rstring_HLSCLK = "self.fpga_per = "
@@ -106,7 +106,7 @@ else:
         for tr in HLS_CLK_list:
             search_string = sstring_HLSCLK
             replace_string = rstring_HLSCLK + str(tr) + " #"
-            newdata = filedata.replace(search_string, replace_string)
+            newdata = newdata.replace(search_string, replace_string)
             infostr = "Injecting " + filein + " with " + replace_string
             print(infostr)
             f = open(fileout,'w')
@@ -164,6 +164,12 @@ else:
             line = str(tr) + "\t" + status + "\t" + estimated + "\t" +  brams + "\t" + dsps + "\t" + ffs + "\t" + luts
             logfd.write(line+"\n")
     print("7\n")
+
+    #restore config
+    f = open(filein,'w')
+    f.write(filedata)
+    f.close()
+
 
     if (RUN_SYN == 1):
         logfd.close()
