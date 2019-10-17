@@ -117,7 +117,7 @@ class PkgConfig(object):
             # A future change should be made to propagate these parameters,
             # in order to avoid duplicated definition.
             self.fpga_freq = 100
-            self.fpga_per = 5 #4 #3 #2
+            self.fpga_per = 2
             self.fpga_log_axi_bus_width = 6
             self.axi_prot_bits = '100'
             # IP register address map
@@ -130,7 +130,7 @@ class PkgConfig(object):
             self.fpga_device = "xczu3eg-sbva484-1-e"
             self.fpga_family = "zynq-ultrascale+"
             self.fpga_freq = 333
-            self.fpga_per = 5 #4 #3 #2
+            self.fpga_per = 2
             self.fpga_log_axi_bus_width = 7
             self.axi_prot_bits = '010'
             # IP register address map
@@ -144,7 +144,7 @@ class PkgConfig(object):
             self.fpga_device = "xc7z020clg484-1"
             self.fpga_family = "zynq-7000"
             self.fpga_freq = 100
-            self.fpga_per = 5 #4 #3 #7
+            self.fpga_per = 7
             self.fpga_log_axi_bus_width = 6
             self.axi_prot_bits = '000'
             # IP register address map
