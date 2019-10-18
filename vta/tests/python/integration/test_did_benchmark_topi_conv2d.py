@@ -218,6 +218,8 @@ def run_conv2d(env, remote, wl, target,
         device = "CPU"
     elif "vta" in target.keys:
         device = "VTA"
+    #line= device + " CONV2D TEST " + status + ": Time cost = " + str(cost.mean) + " sec/op," + str(gops) + " GOPS"
+    #print(line)
     print("%s CONV2D TEST %s: Time cost = %g sec/op, %g GOPS" % (device, status, cost.mean, gops))
 
     return correct, cost, stats
@@ -244,5 +246,5 @@ def test_conv2d(device="vta"):
     vta.testing.run(_run)
 
 if __name__ == "__main__":
-    test_conv2d(device="arm_cpu")
+#    test_conv2d(device="arm_cpu")
     test_conv2d(device="vta")

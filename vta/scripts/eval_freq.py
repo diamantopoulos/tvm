@@ -91,6 +91,48 @@ def parse_vivado_log(util_file, timing_file):
     return [vbrams, vdsps, vffs, vluts, vbramsp, vdspsp, vffsp, vlutsp, wns, tns, tns_fail_endpns, tns_tot_endpns]
 
 
+def parse_eval_log(pynq_eval_out):
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 1 | tail -n 1 | awk '{print $8}'"
+    conv1_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 1 | tail -n 1 | awk '{print $10}'"
+    conv1_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 2 | tail -n 1 | awk '{print $8}'"
+    conv2_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 2 | tail -n 1 | awk '{print $10}'"
+    conv2_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 3 | tail -n 1 | awk '{print $8}'"
+    conv3_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 3 | tail -n 1 | awk '{print $10}'"
+    conv3_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 4 | tail -n 1 | awk '{print $8}'"
+    conv4_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 4 | tail -n 1 | awk '{print $10}'"
+    conv4_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 5 | tail -n 1 | awk '{print $8}'"
+    conv5_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 5 | tail -n 1 | awk '{print $10}'"
+    conv5_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 6 | tail -n 1 | awk '{print $8}'"
+    conv6_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 6 | tail -n 1 | awk '{print $10}'"
+    conv6_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 7 | tail -n 1 | awk '{print $8}'"
+    conv7_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 7 | tail -n 1 | awk '{print $10}'"
+    conv7_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 8 | tail -n 1 | awk '{print $8}'"
+    conv8_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 8 | tail -n 1 | awk '{print $10}'"
+    conv8_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 9 | tail -n 1 | awk '{print $8}'"
+    conv9_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 9 | tail -n 1 | awk '{print $10}'"
+    conv9_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 10 | tail -n 1 | awk '{print $8}'"
+    conv10_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 10 | tail -n 1 | awk '{print $10}'"
+    conv10_gops = subprocess.getoutput(command)
+    return [conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops, conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops]
 
 
 LOAD_SESSION = 0
@@ -104,8 +146,8 @@ if (LOAD_SESSION == 1):
 
 else:
     RUN_SIM = 1
-    RUN_SYN  = True
-    RUN_EVAL = False
+    RUN_SYN  = False
+    RUN_EVAL = True
 
     tvm_root = os.environ.get("TVM_HOME")
     vta_config = "pynq_1x16_i8w8a32_15_15_18_17"
@@ -127,14 +169,14 @@ else:
     f = open(filein,'r')
     filedata = newdata = f.read()
     f.close()
-    print("1\n")
     if (RUN_SIM == 1):
         logfd = open("./run.log",'w')
-        line = "hls_clk\tstatus\test\tbrams\tdsps\tffs\tluts\tvbrams\tvdsps\tvffs\tvluts\twns\ttns\ttns_fail_endpns\ttns_tot_endpns\n"
+        line = "hls_clk\tstatus_syn\test\tbrams\tdsps\tffs\tluts\tvbrams\tvdsps\tvffs\tvluts\twns\ttns\ttns_fail_endpns\ttns_tot_endpns\n"
         logfd.write(line)
         logfd.close()
 
-        HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
+        #HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
+        HLS_CLK_list = [1, 2]
 
         sstring_HLSCLK = "self.fpga_per = "
         rstring_HLSCLK = "self.fpga_per = "
@@ -154,6 +196,7 @@ else:
             pynq_report_hls_out = pynq_images_dir + evaluation + "_vta_csynth.rpt"
             pynq_report_timing_out = pynq_images_dir + evaluation + "_vta_wrapper_timing_summary_routed.rpt"
             pynq_report_utilization_out = pynq_images_dir + evaluation + "_vta_wrapper_utilization_placed.rpt"
+            pynq_eval_out = pynq_images_dir + evaluation + "_vta_eval.rpt"
 
             if (RUN_SYN):
                 print("INFO: Synthesis of " + evaluation + " with Vivado...")
@@ -165,36 +208,63 @@ else:
                     #if process.wait() != 0:
                     #    print("Severe Error executing command: " + command + ". Aborting this evaluation...\n")
                     #    continue
-                    status = ' OK '
+                    status_syn = ' OK '
                     copyfile(pynq_image_in, pynq_image_out)
                     copyfile(pynq_report_hls_in, pynq_report_hls_out)
                     copyfile(pynq_report_timing_in, pynq_report_timing_out)
                     copyfile(pynq_report_utilization_in, pynq_report_utilization_out)
                     [estimated, brams, dsps, ffs, luts] = parse_hls_log(pynq_report_hls_in)
-                    [vbrams, vdsps, vffs, vluts, vbramsp, vdspsp, vffsp, vlutsp, wns, tns, tns_fail_endpns, tns_tot_endpns] = parse_vivado_log(pynq_report_utilization_in, pynq_report_timing_in)
                 else:
                     print("WARNING: file " + pynq_image_out + " was found already. Skipping generation.")
                     copyfile(pynq_image_out, pynq_image_in) # opposite copy
-                    status = 'FOUND';
+                    status_syn = 'FOUND';
                     [estimated, brams, dsps, ffs, luts] = parse_hls_log(pynq_report_hls_out)
-                    [vbrams, vdsps, vffs, vluts, vbramsp, vdspsp, vffsp, vlutsp, wns, tns, tns_fail_endpns, tns_tot_endpns] = parse_vivado_log(pynq_report_utilization_out, pynq_report_timing_out)
+
+                [vbrams, vdsps, vffs, vluts, vbramsp, vdspsp, vffsp, vlutsp, \
+                wns, tns, tns_fail_endpns, tns_tot_endpns] = \
+                parse_vivado_log(pynq_report_utilization_out, pynq_report_timing_out)
             else:
                 print("INFO: Skipping synthesis of " + evaluation + " with Vivado\n")
-                status = 'SKIP'; estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0'; bramsp='0'; dspsp='0'; ffsp='0'; lutsp='0'; wns='0'; tns='0'; tns_fail_endpns='0'; tns_tot_endpns='0';
+                status_syn = 'SKIP'; estimated='0'; brams='0'; dsps='0'; ffs='0'; \
+                luts='0'; vbrams='0'; vdsps='0'; vffs='0'; vluts='0'; \
+                vbramsp='0'; vdspsp='0'; vffsp='0'; vlutsp='0'; wns='0'; \
+                tns='0'; tns_fail_endpns='0'; tns_tot_endpns='0';
 
 
             if (RUN_EVAL):
-                print("INFO: Evaluation of " + evaluation + " on PYNQs...\n")
-                command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + log_file_path
-                subprocess.getoutput(command)
-                #process = subprocess.Popen(command, stderr=subprocess.STDOUT)
-                #if process.wait() != 0:
-                #    print("Severe Error executing command: " + command + ". Aborting this evaluation...\n")
-                #    continue
+                print("INFO: Evaluation of " + evaluation + " on PYNQs...")
+                if (not os.path.exists(pynq_eval_out)):
+                    print("WARNING: file " + pynq_eval_out + " does not exist. Evaluating...")
+                    command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + pynq_eval_out
+                    subprocess.getoutput(command)
+                    subprocess.getoutput("sync")
+                    status_eval = ' OK '
+                else:
+                    print("WARNING: file " + pynq_eval_out + " was found already. Skipping evaluation.")
+                    status_eval = 'FOUND';
+                [conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, \
+                conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, \
+                conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops,  \
+                conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops] \
+                = parse_eval_log(pynq_eval_out)
             else:
                 print("INFO: Skipping evaluation " + evaluation + " on PYNQs\n")
+                status_eval = 'SKIP';
+                conv1_time = conv2_time = conv3_time = conv4_time = conv5_time \
+                = conv6_time = conv7_time = conv8_time = conv9_time = \
+                conv10_time = conv1_gops = conv2_gops = conv3_gops = \
+                conv4_gops = conv5_gops = conv6_gops = conv7_gops = \
+                conv8_gops = conv9_gops = conv10_gops = '0';
 
-            line = line + str(tr) + "\t" + status + "\t" + estimated + "\t" +  brams + "\t" + dsps + "\t" + ffs + "\t" + luts + "\t" +  vbrams + "\t" + vdsps + "\t" + vffs + "\t" + vluts + "\t" + wns + "\t" + tns + "\t" + tns_fail_endpns + "\t" + tns_tot_endpns + "\n"
+            line = line + str(tr) + "\t" + status_syn + "\t" + estimated + "\t" +  \
+            brams + "\t" + dsps + "\t" + ffs + "\t" + luts + "\t" +  vbrams + \
+            "\t" + vdsps + "\t" + vffs + "\t" + vluts + "\t" + wns + "\t" + \
+            tns + "\t" + tns_fail_endpns + "\t" + tns_tot_endpns + "\t" + \
+            status_eval + "\t" + \
+            conv1_time + "\t" + conv2_time + "\t" + conv3_time + "\t" + conv4_time + "\t" + conv5_time + "\t" + \
+            conv6_time + "\t" + conv7_time + "\t" + conv8_time + "\t" + conv9_time + "\t" + conv10_time + "\t" + \
+            conv1_gops + "\t" + conv2_gops + "\t" + conv3_gops + "\t" + conv4_gops + "\t" + conv5_gops + "\t" +  \
+            conv6_gops + "\t" + conv7_gops + "\t" + conv8_gops + "\t" + conv9_gops + "\t" + conv10_gops + "\n"
             logfd = open("./run.log",'w')
             logfd.write(line)
             logfd.close()
