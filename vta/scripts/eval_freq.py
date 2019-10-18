@@ -1,6 +1,5 @@
 ##############################################################################
-#   Copyright 2018 - The OPRECOMP Project Consortium,
-#                    IBM Research GmbH. All rights reserved.
+#   Copyright 2019 - IBM Research GmbH. All rights reserved.
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -15,12 +14,10 @@
 #   limitations under the License.
 ##############################################################################
 
-# @file evaluate_solution_bitacc.py
+# @file eval_freq.py
 # @author Dionysios Diamantopoulos, did@zurich.ibm.com
-# @date 15 Oct 2017
-# @brief Script for fixed-point exploration for the BLSTM mb Uses the fixed-point
-# library of Xilinx Vivado HLS. For a combination of fixed-point format,
-# collects accuracy and synthesis results and plots them
+# @date 18 Oct 2019
+# @brief Script for exploration of frequency for VTA
 
 import os
 import subprocess
@@ -145,8 +142,7 @@ if (LOAD_SESSION == 1):
     [labels, confMat, mat_acc_min, mat_acc_max, [total_bits, frac_bits], mat_brams, mat_dsps, mat_ffs, mat_luts] = np.load(savesessionfile)
 
 else:
-    RUN_SIM = 1
-    RUN_SYN  = False
+    RUN_SYN  = True
     RUN_EVAL = True
 
     tvm_root = os.environ.get("TVM_HOME")
@@ -169,18 +165,24 @@ else:
     f = open(filein,'r')
     filedata = newdata = f.read()
     f.close()
-    if (RUN_SIM == 1):
-        logfd = open("./run.log",'w')
-        line = "hls_clk\tstatus_syn\test\tbrams\tdsps\tffs\tluts\tvbrams\tvdsps\tvffs\tvluts\twns\ttns\ttns_fail_endpns\ttns_tot_endpns\n"
-        logfd.write(line)
-        logfd.close()
+    logfd = open("./run.log",'w')
+    line = "viv_freq\thls_clk\tstatus_syn\test\tbrams\tdsps\tffs\tluts\tvbrams\tvdsps\tvffs\tvluts\twns\ttns\ttns_fail_endpns\ttns_tot_endpns\n"
+    logfd.write(line)
+    logfd.close()
 
-        #HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
-        HLS_CLK_list = [1, 2]
+    VIV_FREQ_list = [100, 142, 167, 200]
+    #HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
+    HLS_CLK_list = [1, 2]
 
-        sstring_HLSCLK = "self.fpga_per = "
-        rstring_HLSCLK = "self.fpga_per = "
+    sstring_HLSCLK = "self.fpga_per = "
+    rstring_HLSCLK = "self.fpga_per = "
+    sstring_VIVFREQ = "self.fpga_freq = "
+    rstring_VIVFREQ = "self.fpga_freq = "
 
+    for fr in VIV_FREQ_list:
+        search_string = sstring_VIVFREQ
+        replace_string = rstring_VIVFREQ + str(fr) + " #"
+        newdata = newdata.replace(search_string, replace_string)
         for tr in HLS_CLK_list:
             search_string = sstring_HLSCLK
             replace_string = rstring_HLSCLK + str(tr) + " #"
@@ -191,7 +193,7 @@ else:
             f.close()
             copyfile(fileout, filein)
 
-            evaluation = vta_config + "_FREQ-100_TARGET-" + str(tr)
+            evaluation = vta_config + "_FREQ-" + str(fr) + "_TARGET-" + str(tr)
             pynq_image_out = pynq_images_dir + evaluation + "_vta.bit"
             pynq_report_hls_out = pynq_images_dir + evaluation + "_vta_csynth.rpt"
             pynq_report_timing_out = pynq_images_dir + evaluation + "_vta_wrapper_timing_summary_routed.rpt"
@@ -235,6 +237,8 @@ else:
                 print("INFO: Evaluation of " + evaluation + " on PYNQs...")
                 if (not os.path.exists(pynq_eval_out)):
                     print("WARNING: file " + pynq_eval_out + " does not exist. Evaluating...")
+                    # ensure that the right bitstream will be picked
+                    #copyfile(pynq_image_out, pynq_image_in) # opposite copy
                     command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + pynq_eval_out
                     subprocess.getoutput(command)
                     subprocess.getoutput("sync")
@@ -256,7 +260,7 @@ else:
                 conv4_gops = conv5_gops = conv6_gops = conv7_gops = \
                 conv8_gops = conv9_gops = conv10_gops = '0';
 
-            line = line + str(tr) + "\t" + status_syn + "\t" + estimated + "\t" +  \
+            line = line + str(fr) + "\t" + str(tr) + "\t" + status_syn + "\t" + estimated + "\t" +  \
             brams + "\t" + dsps + "\t" + ffs + "\t" + luts + "\t" +  vbrams + \
             "\t" + vdsps + "\t" + vffs + "\t" + vluts + "\t" + wns + "\t" + \
             tns + "\t" + tns_fail_endpns + "\t" + tns_tot_endpns + "\t" + \
@@ -268,7 +272,6 @@ else:
             logfd = open("./run.log",'w')
             logfd.write(line)
             logfd.close()
-
 
     #restore config
     f = open(filein,'w')
