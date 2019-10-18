@@ -129,10 +129,10 @@ else:
     f.close()
     print("1\n")
     if (RUN_SIM == 1):
-        #logfd = open("./run.log",'w')
+        logfd = open("./run.log",'w')
         line = "hls_clk\tstatus\test\tbrams\tdsps\tffs\tluts\tvbrams\tvdsps\tvffs\tvluts\twns\ttns\ttns_fail_endpns\ttns_tot_endpns\n"
-        #logfd.write(line)
-        #logfd.close()
+        logfd.write(line)
+        logfd.close()
 
         HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 
@@ -149,7 +149,7 @@ else:
             f.close()
             copyfile(fileout, filein)
 
-            evaluation = vta_config + "_FREQ-200_TARGET-" + str(tr)
+            evaluation = vta_config + "_FREQ-100_TARGET-" + str(tr)
             pynq_image_out = pynq_images_dir + evaluation + "_vta.bit"
             pynq_report_hls_out = pynq_images_dir + evaluation + "_vta_csynth.rpt"
             pynq_report_timing_out = pynq_images_dir + evaluation + "_vta_wrapper_timing_summary_routed.rpt"
@@ -165,16 +165,13 @@ else:
                     #if process.wait() != 0:
                     #    print("Severe Error executing command: " + command + ". Aborting this evaluation...\n")
                     #    continue
-                    if check(log_file_path, "BITSTREAM ERROR"):
-                        status = 'FAIL'; estimated='0'; brams='0'; dsps='0'; ffs='0'; luts='0'; bramsp='0'; dspsp='0'; ffsp='0'; lutsp='0'; wns='0'; tns='0'; tns_fail_endpns='0'; tns_tot_endpns='0';
-                    else:
-                        status = ' OK '
-                        copyfile(pynq_image_in, pynq_image_out)
-                        copyfile(pynq_report_hls_in, pynq_report_hls_out)
-                        copyfile(pynq_report_timing_in, pynq_report_timing_out)
-                        copyfile(pynq_report_utilization_in, pynq_report_utilization_out)
-                        [estimated, brams, dsps, ffs, luts] = parse_hls_log(pynq_report_hls_in)
-                        [vbrams, vdsps, vffs, vluts, vbramsp, vdspsp, vffsp, vlutsp, wns, tns, tns_fail_endpns, tns_tot_endpns] = parse_vivado_log(pynq_report_utilization_in, pynq_report_timing_in)
+                    status = ' OK '
+                    copyfile(pynq_image_in, pynq_image_out)
+                    copyfile(pynq_report_hls_in, pynq_report_hls_out)
+                    copyfile(pynq_report_timing_in, pynq_report_timing_out)
+                    copyfile(pynq_report_utilization_in, pynq_report_utilization_out)
+                    [estimated, brams, dsps, ffs, luts] = parse_hls_log(pynq_report_hls_in)
+                    [vbrams, vdsps, vffs, vluts, vbramsp, vdspsp, vffsp, vlutsp, wns, tns, tns_fail_endpns, tns_tot_endpns] = parse_vivado_log(pynq_report_utilization_in, pynq_report_timing_in)
                 else:
                     print("WARNING: file " + pynq_image_out + " was found already. Skipping generation.")
                     copyfile(pynq_image_out, pynq_image_in) # opposite copy
