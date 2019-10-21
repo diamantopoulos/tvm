@@ -43,7 +43,7 @@ def check(file_to_search, string_to_find):
             return False  # Because you finished the search without finding
 
 def parse_hls_log(report_file):
-    command = "cat " + pynq_report_hls_in + "  | grep -A 3 Estimated | tail -n 2 | head -n 1 |  awk '{print $4}' | sed 's/.$//'"
+    command = "cat " + report_file + "  | grep -A 3 Estimated | tail -n 2 | head -n 1 |  awk '{print $4}' | sed 's/.$//'"
     #print(command)
     estimated = subprocess.getoutput(command)
     command = "cat " + report_file + "  | grep -A 3 Total | head -n 1 | awk '{print $3}' | sed 's/.$//'"
@@ -89,47 +89,51 @@ def parse_vivado_log(util_file, timing_file):
 
 
 def parse_eval_log(pynq_eval_out):
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 1 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST FAILED\" | awk '{print $4}' | sed 's/.$//' | uniq"
+    status_eval = subprocess.getoutput(command)
+    if status_eval != "FAILED":
+        status_eval = "PASSED"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 1 | tail -n 1 | awk '{print $8}'"
     conv1_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 1 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 1 | tail -n 1 | awk '{print $10}'"
     conv1_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 2 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 2 | tail -n 1 | awk '{print $8}'"
     conv2_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 2 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 2 | tail -n 1 | awk '{print $10}'"
     conv2_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 3 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 3 | tail -n 1 | awk '{print $8}'"
     conv3_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 3 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 3 | tail -n 1 | awk '{print $10}'"
     conv3_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 4 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 4 | tail -n 1 | awk '{print $8}'"
     conv4_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 4 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 4 | tail -n 1 | awk '{print $10}'"
     conv4_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 5 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 5 | tail -n 1 | awk '{print $8}'"
     conv5_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 5 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 5 | tail -n 1 | awk '{print $10}'"
     conv5_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 6 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 6 | tail -n 1 | awk '{print $8}'"
     conv6_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 6 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 6 | tail -n 1 | awk '{print $10}'"
     conv6_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 7 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 7 | tail -n 1 | awk '{print $8}'"
     conv7_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 7 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 7 | tail -n 1 | awk '{print $10}'"
     conv7_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 8 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 8 | tail -n 1 | awk '{print $8}'"
     conv8_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 8 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 8 | tail -n 1 | awk '{print $10}'"
     conv8_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 9 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 9 | tail -n 1 | awk '{print $8}'"
     conv9_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 9 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 9 | tail -n 1 | awk '{print $10}'"
     conv9_gops = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 10 | tail -n 1 | awk '{print $8}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 10 | tail -n 1 | awk '{print $8}'"
     conv10_time = subprocess.getoutput(command)
-    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST PASSED:\" | head -n 10 | tail -n 1 | awk '{print $10}'"
+    command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST\" | head -n 10 | tail -n 1 | awk '{print $10}'"
     conv10_gops = subprocess.getoutput(command)
-    return [conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops, conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops]
+    return [status_eval, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops, conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops]
 
 
 LOAD_SESSION = 0
@@ -171,8 +175,7 @@ else:
     logfd.close()
 
     VIV_FREQ_list = [100, 142, 167, 200]
-    #HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
-    HLS_CLK_list = [1, 2]
+    HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 6.6, 6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 8, 8.5, 9, 9.5, 10]
 
     sstring_HLSCLK = "self.fpga_per = "
     rstring_HLSCLK = "self.fpga_per = "
@@ -237,23 +240,37 @@ else:
                 print("INFO: Evaluation of " + evaluation + " on PYNQs...")
                 if (not os.path.exists(pynq_eval_out)):
                     print("WARNING: file " + pynq_eval_out + " does not exist. Evaluating...")
-                    # ensure that the right bitstream will be picked
-                    #copyfile(pynq_image_out, pynq_image_in) # opposite copy
-                    command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + pynq_eval_out
-                    subprocess.getoutput(command)
-                    subprocess.getoutput("sync")
-                    status_eval = ' OK '
+                    if (not os.path.exists(pynq_image_out)):
+                        print("ERROR: file " + pynq_image_out + " does not exist. Cannot evaluate solution.")
+                        status_run_eval = 'ERROR'; status_eval = 'UNKNOWN'
+                        conv1_time = conv2_time = conv3_time = conv4_time = conv5_time \
+                        = conv6_time = conv7_time = conv8_time = conv9_time = \
+                        conv10_time = conv1_gops = conv2_gops = conv3_gops = \
+                        conv4_gops = conv5_gops = conv6_gops = conv7_gops = \
+                        conv8_gops = conv9_gops = conv10_gops = '0';
+                    else:
+                        # ensure that the right bitstream will be picked
+                        copyfile(pynq_image_out, pynq_image_in) # opposite copy
+                        command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + pynq_eval_out
+                        subprocess.getoutput(command)
+                        subprocess.getoutput("sync")
+                        status_run_eval = ' OK '
+                        [status_eval, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, \
+                        conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, \
+                        conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops,  \
+                        conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops] \
+                        = parse_eval_log(pynq_eval_out)
                 else:
                     print("WARNING: file " + pynq_eval_out + " was found already. Skipping evaluation.")
-                    status_eval = 'FOUND';
-                [conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, \
-                conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, \
-                conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops,  \
-                conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops] \
-                = parse_eval_log(pynq_eval_out)
+                    status_run_eval = 'FOUND';
+                    [status_eval, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, \
+                    conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, \
+                    conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops,  \
+                    conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops] \
+                    = parse_eval_log(pynq_eval_out)
             else:
                 print("INFO: Skipping evaluation " + evaluation + " on PYNQs\n")
-                status_eval = 'SKIP';
+                status_run_eval = 'SKIP'; status_eval = 'SKIP';
                 conv1_time = conv2_time = conv3_time = conv4_time = conv5_time \
                 = conv6_time = conv7_time = conv8_time = conv9_time = \
                 conv10_time = conv1_gops = conv2_gops = conv3_gops = \
@@ -264,7 +281,7 @@ else:
             brams + "\t" + dsps + "\t" + ffs + "\t" + luts + "\t" +  vbrams + \
             "\t" + vdsps + "\t" + vffs + "\t" + vluts + "\t" + wns + "\t" + \
             tns + "\t" + tns_fail_endpns + "\t" + tns_tot_endpns + "\t" + \
-            status_eval + "\t" + \
+            status_run_eval + "\t" + status_eval + "\t" + \
             conv1_time + "\t" + conv2_time + "\t" + conv3_time + "\t" + conv4_time + "\t" + conv5_time + "\t" + \
             conv6_time + "\t" + conv7_time + "\t" + conv8_time + "\t" + conv9_time + "\t" + conv10_time + "\t" + \
             conv1_gops + "\t" + conv2_gops + "\t" + conv3_gops + "\t" + conv4_gops + "\t" + conv5_gops + "\t" +  \
