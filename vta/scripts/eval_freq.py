@@ -88,7 +88,7 @@ def parse_vivado_log(util_file, timing_file):
     return [vbrams, vdsps, vffs, vluts, vbramsp, vdspsp, vffsp, vlutsp, wns, tns, tns_fail_endpns, tns_tot_endpns]
 
 
-def parse_eval_log(pynq_eval_out):
+def parse_eval_conv_log(pynq_eval_out):
     command = "cat " + pynq_eval_out + " | grep  \"VTA CONV2D TEST FAILED\" | awk '{print $4}' | sed 's/.$//' | uniq"
     status_eval = subprocess.getoutput(command)
     if status_eval != "FAILED":
@@ -136,6 +136,57 @@ def parse_eval_log(pynq_eval_out):
     return [status_eval, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops, conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops]
 
 
+
+def parse_eval_tune_log(pynq_eval_out):
+    status_eval = "PASSED"
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 1 | tail -n 1 | awk '{print $11}'"
+    conv1_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 1 | tail -n 1 | awk '{print $5}'"
+    conv1_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 2 | tail -n 1 | awk '{print $11}'"
+    conv2_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 2 | tail -n 1 | awk '{print $5}'"
+    conv2_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 3 | tail -n 1 | awk '{print $11}'"
+    conv3_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 3 | tail -n 1 | awk '{print $5}'"
+    conv3_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 4 | tail -n 1 | awk '{print $11}'"
+    conv4_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 4 | tail -n 1 | awk '{print $5}'"
+    conv4_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 5 | tail -n 1 | awk '{print $11}'"
+    conv5_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 5 | tail -n 1 | awk '{print $5}'"
+    conv5_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 6 | tail -n 1 | awk '{print $11}'"
+    conv6_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 6 | tail -n 1 | awk '{print $5}'"
+    conv6_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 7 | tail -n 1 | awk '{print $11}'"
+    conv7_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 7 | tail -n 1 | awk '{print $5}'"
+    conv7_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 8 | tail -n 1 | awk '{print $11}'"
+    conv8_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 8 | tail -n 1 | awk '{print $5}'"
+    conv8_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 9 | tail -n 1 | awk '{print $11}'"
+    conv9_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 9 | tail -n 1 | awk '{print $5}'"
+    conv9_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 10 | tail -n 1 | awk '{print $11}'"
+    conv10_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Current/Best:\" | head -n 10 | tail -n 1 | awk '{print $5}'"
+    conv10_gops = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Mean inference time\" | awk '{print $6}'"
+    inf_time = subprocess.getoutput(command)
+    command = "cat " + pynq_eval_out + " | grep  \"Mean inference time\" | awk '{print $8}' | tail -c +2"
+    dev_time = subprocess.getoutput(command)
+    return [status_eval, inf_time, dev_time, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops, conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops]
+
+
+
 LOAD_SESSION = 0
 PLOT_ENABLE = 1
 
@@ -148,6 +199,7 @@ if (LOAD_SESSION == 1):
 else:
     RUN_SYN  = True
     RUN_EVAL = True
+    EVALUATION = "TUNE"
 
     tvm_root = os.environ.get("TVM_HOME")
     vta_config = "pynq_1x16_i8w8a32_15_15_18_17"
@@ -201,7 +253,10 @@ else:
             pynq_report_hls_out = pynq_images_dir + evaluation + "_vta_csynth.rpt"
             pynq_report_timing_out = pynq_images_dir + evaluation + "_vta_wrapper_timing_summary_routed.rpt"
             pynq_report_utilization_out = pynq_images_dir + evaluation + "_vta_wrapper_utilization_placed.rpt"
-            pynq_eval_out = pynq_images_dir + evaluation + "_vta_eval.rpt"
+            if (EVALUATION == "CONV"):
+                pynq_eval_out = pynq_images_dir + evaluation + "_vta_eval.rpt"
+            elif (EVALUATION == "TUNE"):
+                pynq_eval_out = pynq_images_dir + evaluation + "_vta_eval_tune.rpt"
 
             if (RUN_SYN):
                 print("INFO: Synthesis of " + evaluation + " with Vivado...")
@@ -251,23 +306,28 @@ else:
                     else:
                         # ensure that the right bitstream will be picked
                         copyfile(pynq_image_out, pynq_image_in) # opposite copy
-                        command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + pynq_eval_out
+                        if (EVALUATION == "CONV"):
+                            command = "python3 " + tvm_root + "/vta/tests/python/integration/test_did_benchmark_topi_conv2d.py > "  + pynq_eval_out
+                        elif (EVALUATION == "TUNE"):
+                            command = "python3 " + tvm_root + "/tutorials/autotvm/tune_relay_vta.py > "  + pynq_eval_out
                         subprocess.getoutput(command)
                         subprocess.getoutput("sync")
                         status_run_eval = ' OK '
-                        [status_eval, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, \
-                        conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, \
-                        conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops,  \
-                        conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops] \
-                        = parse_eval_log(pynq_eval_out)
                 else:
                     print("WARNING: file " + pynq_eval_out + " was found already. Skipping evaluation.")
                     status_run_eval = 'FOUND';
+                if (EVALUATION == "CONV"):
                     [status_eval, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, \
                     conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, \
                     conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops,  \
                     conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops] \
-                    = parse_eval_log(pynq_eval_out)
+                    = parse_eval_conv_log(pynq_eval_out)
+                elif (EVALUATION == "TUNE"):
+                    [status_eval, inf_time, dev_time, conv1_time, conv2_time, conv3_time, conv4_time, conv5_time, \
+                    conv6_time, conv7_time, conv8_time, conv9_time, conv10_time, \
+                    conv1_gops, conv2_gops, conv3_gops, conv4_gops, conv5_gops,  \
+                    conv6_gops, conv7_gops, conv8_gops, conv9_gops, conv10_gops] \
+                    = parse_eval_tune_log(pynq_eval_out)
             else:
                 print("INFO: Skipping evaluation " + evaluation + " on PYNQs\n")
                 status_run_eval = 'SKIP'; status_eval = 'SKIP';
@@ -285,7 +345,11 @@ else:
             conv1_time + "\t" + conv2_time + "\t" + conv3_time + "\t" + conv4_time + "\t" + conv5_time + "\t" + \
             conv6_time + "\t" + conv7_time + "\t" + conv8_time + "\t" + conv9_time + "\t" + conv10_time + "\t" + \
             conv1_gops + "\t" + conv2_gops + "\t" + conv3_gops + "\t" + conv4_gops + "\t" + conv5_gops + "\t" +  \
-            conv6_gops + "\t" + conv7_gops + "\t" + conv8_gops + "\t" + conv9_gops + "\t" + conv10_gops + "\n"
+            conv6_gops + "\t" + conv7_gops + "\t" + conv8_gops + "\t" + conv9_gops + "\t" + conv10_gops
+            if (EVALUATION == "CONV"):
+                line = line + "\n"
+            elif (EVALUATION == "TUNE"):
+                line = line + "\t" + inf_time + "\t" + dev_time  + "\n"
             logfd = open("./run.log",'w')
             logfd.write(line)
             logfd.close()

@@ -163,7 +163,7 @@ def compile_network(env, target, model, start_pack, stop_pack):
 #    ----------------------------------
 #    key          total  free  pending
 #    ----------------------------------
-#    pynq         6      6     0 
+#    pynq         6      6     0
 #    rpi3b        11     11    0
 #    ----------------------------------
 #
@@ -201,8 +201,8 @@ log_file = "%s.%s.log" % (device, network)
 tuning_option = {
     'log_filename': log_file,
 
-    'tuner': 'random',
-    'n_trial': 1,
+    'tuner': 'gridsearch',
+    'n_trial': 20,
     'early_stopping': None,
 
     'measure_option': autotvm.measure_option(
@@ -221,7 +221,7 @@ tuning_option = {
 # .. note:: How to set tuning options
 #
 #   In general, the default values provided here work well.
-#   If you have enough time budget, you can set :code:`n_trial`, :code:`early_stopping` 
+#   If you have enough time budget, you can set :code:`n_trial`, :code:`early_stopping`
 #   to larger values, makes the tuning run for longer.
 #   If your device is under-powered or your conv2d operators are large, consider
 #   setting a longer timeout.
@@ -257,9 +257,9 @@ def tune_tasks(tasks,
 
         # create tuner
         if tuner == 'xgb' or tuner == 'xgb-rank':
-            tuner_obj = XGBTuner(tsk, loss_type='rank')
+            tuner_obj = XGBTuner(tsk, loss_type='rank', feature_type='curve')
         elif tuner == 'xgb_knob':
-            tuner_obj = XGBTuner(tsk, loss_type='rank', feature_type='knob')
+            tuner_obj = XGBTuner(tsk, loss_type='rank', feature_type='curve')
         elif tuner == 'ga':
             tuner_obj = GATuner(tsk, pop_size=50)
         elif tuner == 'random':
@@ -270,10 +270,13 @@ def tune_tasks(tasks,
             raise ValueError("Invalid tuner: " + tuner)
 
         if use_transfer_learning:
+            print("use_transfer_learning...")
             if os.path.isfile(tmp_log_file):
+                print("from file " + tmp_log_file)
                 tuner_obj.load_history(autotvm.record.load_from_file(tmp_log_file))
 
         # do tuning
+        #print("INFO: len(tsk.config_space) = " + str(len(tsk.config_space)))
         n_trial = min(n_trial, len(tsk.config_space))
         tuner_obj.tune(n_trial=n_trial,
                        early_stopping=early_stopping,
@@ -284,7 +287,7 @@ def tune_tasks(tasks,
 
     # pick best records to a cache file
     autotvm.record.pick_best(tmp_log_file, log_filename)
-    os.remove(tmp_log_file)
+    #os.remove(tmp_log_file)
 
 
 
@@ -335,7 +338,14 @@ def tune_and_evaluate(tuning_opt):
         remote = autotvm.measure.request_remote(env.TARGET, tracker_host, tracker_port, timeout=10000)
         # Reconfigure the JIT runtime and FPGA.
         vta.reconfig_runtime(remote)
-        vta.program_fpga(remote, bitstream=None)
+        #vta.program_fpga(remote, bitstream=None)
+        custom_bitstream = os.environ.get("TVM_HOME") + "/vta/build/hardware/xilinx/vivado/pynq_1x16_i8w8a32_15_15_18_17/export/vta.bit"
+        if (not os.path.exists(custom_bitstream)):
+            print("BITSTREAM ERROR: file " + custom_bitstream + " does not exist. Will use a default bitstream...")
+            vta.program_fpga(remote, bitstream=None)
+        else:
+            print("BITSTREAM INFO: Using generated bitstream...")
+            vta.program_fpga(remote, bitstream=custom_bitstream)
     else:
         # In simulation mode, host the RPC server locally.
         remote = rpc.LocalSession()
@@ -351,7 +361,7 @@ def tune_and_evaluate(tuning_opt):
                                               ops=(tvm.relay.op.nn.conv2d,),
                                               target=target,
                                               target_host=env.target_host)
-    
+
     # We should have extracted 10 convolution tasks
     assert len(tasks) == 10
     print("Extracted {} conv2d tasks:".format(len(tasks)))
@@ -375,11 +385,12 @@ def tune_and_evaluate(tuning_opt):
     #return
 
     # run tuning tasks
-    print("Tuning...")
-    tune_tasks(tasks, **tuning_opt)
+    #print("Tuning...")
+    #tune_tasks(tasks, **tuning_opt)
 
     # compile kernels with history best records
-    with autotvm.tophub.context(target, extra_files=[log_file]):
+    #with autotvm.tophub.context(target, extra_files=[log_file]):
+    with autotvm.apply_history_best(log_file):
         # Compile network
         print("Compile...")
         with relay.build_config(opt_level=3, disabled_pass={"AlterOpLayout"}):
@@ -412,7 +423,7 @@ def tune_and_evaluate(tuning_opt):
 
         # evaluate
         print("Evaluate inference time cost...")
-        timer = m.module.time_evaluator("run", ctx, number=1, repeat=10)
+        timer = m.module.time_evaluator("run", ctx, number=1, repeat=50)
         tcost = timer()
         prof_res = np.array(tcost.results) * 1000  # convert to millisecond
         print("Mean inference time (std dev): %.2f ms (%.2f ms)" %
