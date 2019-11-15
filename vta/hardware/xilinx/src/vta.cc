@@ -507,8 +507,8 @@ PRAGMA_HLS(HLS INTERFACE s_axilite port = done bundle = CONTROL_BUS offset = VTA
       //memcpy(&uop_mem[sram_idx],
       //       (const uop_T*) &uops[dram_idx],
       //       insn.mem.x_size * sizeof(uop_T));
-    loop_1: for (int j = 0; j < insn.mem.x_size; j++) {
-    	dbprintf("set_directive_loop_tripcount -min %u -max %u compute/loop_1\n", insn.mem.x_size, insn.mem.x_size);
+    cloop_1: for (int j = 0; j < insn.mem.x_size; j++) {
+    	dbprintf("set_directive_loop_tripcount -min %u -max %u compute/cloop_1\n", insn.mem.x_size, insn.mem.x_size);
     	uop_mem[sram_idx+j] = uops[dram_idx + j];
       }
     } else if (insn.mem.memory_type == VTA_MEM_ID_ACC) {
