@@ -116,6 +116,13 @@ uint64_t vta(
 
 uint32_t globalSeed;
 
+int load_instrs  = 0;
+int store_instrs = 0;
+int gemm_instrs  = 0;
+int alu_instrs   = 0;
+int uops_gemm  = 0;
+int uops_alu   = 0;
+
 const char* getOpcodeString(int opcode, bool use_imm) {
   // Returns string name
   if (opcode == VTA_ALU_OPCODE_MIN) {
@@ -346,6 +353,7 @@ VTAGenericInsn getGEMMInsn(int uop_offset, int batch, int in_feat, int out_feat,
   if (!uop_compression) {
     insn.uop_bgn = uop_offset;
     insn.uop_end = uop_offset + batch * in_feat * out_feat;
+    printf("uop_offset=%u, batch = %u, in_feat = %u, out_feat = %u, insn.uop_end = %u\n", uop_offset, batch, in_feat, out_feat, insn.uop_end);
     insn.iter_out = 1;
     insn.iter_in = 1;
     insn.dst_factor_out = 0;
@@ -573,6 +581,7 @@ void printParameters() {
 }
 
 void printInstruction(int num_insn, VTAGenericInsn *insns) {
+
   // Keep tabs on dependence queues
   int l2g_queue = 0;
   int g2l_queue = 0;
@@ -589,14 +598,14 @@ void printInstruction(int num_insn, VTAGenericInsn *insns) {
     if (c.mem.opcode == VTA_OPCODE_LOAD || c.mem.opcode == VTA_OPCODE_STORE) {
       // Print instruction field information
       if (c.mem.opcode == VTA_OPCODE_LOAD) {
-        printf("LOAD ");
+        printf("LOAD "); load_instrs++;
         if (c.mem.memory_type == VTA_MEM_ID_UOP) printf("UOP\n");
         if (c.mem.memory_type == VTA_MEM_ID_WGT) printf("WGT\n");
         if (c.mem.memory_type == VTA_MEM_ID_INP) printf("INP\n");
         if (c.mem.memory_type == VTA_MEM_ID_ACC) printf("ACC\n");
       }
       if (c.mem.opcode == VTA_OPCODE_STORE) {
-        printf("STORE ACC\n");
+        printf("STORE ACC\n"); store_instrs++;
       }
       printf("\tdep - pop prev: %d, pop next: %d, push prev: %d, push next: %d\n",
              static_cast<int>(c.mem.pop_prev_dep),
@@ -630,7 +639,7 @@ void printInstruction(int num_insn, VTAGenericInsn *insns) {
       }
     } else if (c.mem.opcode == VTA_OPCODE_GEMM) {
       // Print instruction field information
-      printf("GEMM\n");
+      printf("GEMM\n"); gemm_instrs++;
       printf("\tdep - pop prev: %d, pop next: %d, push prev: %d, push next: %d\n",
              static_cast<int>(c.mem.pop_prev_dep),
              static_cast<int>(c.mem.pop_next_dep),
@@ -667,7 +676,7 @@ void printInstruction(int num_insn, VTAGenericInsn *insns) {
       if (c.gemm.push_next_dep) g2s_queue++;
     } else if (c.mem.opcode == VTA_OPCODE_ALU) {
       // Print instruction field information
-      printf("ALU - %s\n", getOpcodeString(c.alu.alu_opcode, c.alu.use_imm));
+      printf("ALU - %s\n", getOpcodeString(c.alu.alu_opcode, c.alu.use_imm)); alu_instrs++;
       printf("\tdep - pop prev: %d, pop next: %d, push prev: %d, push next: %d\n",
              static_cast<int>(c.mem.pop_prev_dep),
              static_cast<int>(c.mem.pop_next_dep),
@@ -801,7 +810,7 @@ int alu_test(int opcode, bool use_imm, int batch, int vector_size, bool uop_comp
 
 #if VTA_DEBUG == 1
   printInstruction(ins_size, insn_buf);
-  printMicroOp(uop_size, uop_buf);
+  printMicroOp(uop_size, uop_buf); uops_alu += uop_size;
 #endif
 
   // Initialize the input/output data
@@ -1094,7 +1103,8 @@ int blocked_gemm_test(int batch, int channels, int block, bool uop_compression,
 
 #if VTA_DEBUG == 1
   printInstruction(ins_size, insn_buf);
-  printMicroOp(uop_size, uop_buf);
+  printMicroOp(uop_size, uop_buf); uops_gemm += uop_size;
+  dbprintf("DEBUG - Total instrs: %d, LOADs=%d, STOREs=%d, GEMMs=%d, ALUs=%d, uops_alu=%d, uops_gemm=%d\n", ins_size, load_instrs, store_instrs, gemm_instrs, alu_instrs, uops_alu, uops_gemm);
 #endif
 
   // Initialize inputs
@@ -1327,7 +1337,7 @@ int gemm_test(int batch, int in_channels, int out_channels, bool uop_compression
 
 #if VTA_DEBUG == 1
   printInstruction(ins_size, insn_buf);
-  printMicroOp(uop_size, uop_buf);
+  printMicroOp(uop_size, uop_buf); uops_gemm += uop_size;
 #endif
 
   // Initialize inputs

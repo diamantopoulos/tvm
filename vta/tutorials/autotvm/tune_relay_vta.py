@@ -163,7 +163,7 @@ def compile_network(env, target, model, start_pack, stop_pack):
 #    ----------------------------------
 #    key          total  free  pending
 #    ----------------------------------
-#    pynq         6      6     0 
+#    pynq         6      6     0
 #    rpi3b        11     11    0
 #    ----------------------------------
 #
@@ -207,8 +207,13 @@ tuning_option = {
 
     'measure_option': autotvm.measure_option(
         builder=autotvm.LocalBuilder(),
-        runner=autotvm.RPCRunner(
-            env.TARGET, host=tracker_host, port=tracker_port,
+#        runner=autotvm.RPCRunner(
+#            env.TARGET, host=tracker_host, port=tracker_port,
+#            number=5,
+#            timeout=60,
+#            check_correctness=True
+#        ),
+        runner=autotvm.LocalRunner(
             number=5,
             timeout=60,
             check_correctness=True
@@ -216,12 +221,13 @@ tuning_option = {
     ),
 }
 
+
 ####################################################################
 #
 # .. note:: How to set tuning options
 #
 #   In general, the default values provided here work well.
-#   If you have enough time budget, you can set :code:`n_trial`, :code:`early_stopping` 
+#   If you have enough time budget, you can set :code:`n_trial`, :code:`early_stopping`
 #   to larger values, makes the tuning run for longer.
 #   If your device is under-powered or your conv2d operators are large, consider
 #   setting a longer timeout.
@@ -337,6 +343,7 @@ def tune_and_evaluate(tuning_opt):
         vta.reconfig_runtime(remote)
         vta.program_fpga(remote, bitstream=None)
     else:
+        print("HEREREEEEE")
         # In simulation mode, host the RPC server locally.
         remote = rpc.LocalSession()
 
@@ -351,7 +358,7 @@ def tune_and_evaluate(tuning_opt):
                                               ops=(tvm.relay.op.nn.conv2d,),
                                               target=target,
                                               target_host=env.target_host)
-    
+
     # We should have extracted 10 convolution tasks
     assert len(tasks) == 10
     print("Extracted {} conv2d tasks:".format(len(tasks)))
@@ -372,7 +379,7 @@ def tune_and_evaluate(tuning_opt):
 
     # We do not run the tuning in our webpage server since it takes too long.
     # Comment the following line to run it by yourself.
-    return
+    # return
 
     # run tuning tasks
     print("Tuning...")

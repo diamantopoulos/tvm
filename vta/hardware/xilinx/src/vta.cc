@@ -28,14 +28,20 @@
 
 #include "vta.h"
 
+int loads = 0;
+int stores = 0;
+
 template <typename DATA_T, int MAT_AXI_RATIO>
 void reset_mem(
   memop_sram_T &sram_idx,
   memop_sram_T range,
   DATA_T mem[][MAT_AXI_RATIO]) {
 
-  for (int i = 0; i < range; i ++) {
-    for (int j = 0; j < MAT_AXI_RATIO; j ++) {
+ loop_1: for (int i = 0; i < range; i ++) {
+//#pragma HLS LOOP_TRIPCOUNT min=1 max=1 avg=1
+//set_directive_loop_tripcount -min 1 -max 1 -avg 1 "reset_mem/loop_1"
+	  dbprintf("set_directive_loop_tripcount -min %u -max %u reset_mem/loop_1\n", range, range);
+	loop_2:  for (int j = 0; j < MAT_AXI_RATIO; j ++) {
 #pragma HLS UNROLL
       mem[sram_idx][j] = 0;
     }
@@ -59,12 +65,18 @@ void load_pad_2d(
 #pragma HLS INLINE
 
   reset_mem<DATA_T, MAT_AXI_RATIO>(sram_idx, y_offset_0, dst);
-  for (int y = 0; y < y_size; y++) {
+  loop_1: for (int y = 0; y < y_size; y++) {
+  dbprintf("set_directive_loop_tripcount -min %u -max %u load_pad_2d/loop_1\n", y_size, y_size);
 #pragma HLS PIPELINE
     reset_mem<DATA_T, MAT_AXI_RATIO>(sram_idx, x_pad_0, dst);
-    memcpy(&dst[sram_idx][0],
-           (const DATA_T*) &src[dram_idx * MAT_AXI_RATIO],
-           x_size * ELEM_BYTES);
+    //memcpy(&dst[sram_idx][0],
+    //       (const DATA_T*) &src[dram_idx * MAT_AXI_RATIO],
+    //       x_size * ELEM_BYTES);
+    loop_2: for (int j = 0; j < x_size; j++) {
+    	dbprintf("set_directive_loop_tripcount -min %u -max %u load_pad/2d_loop_2\n", x_size, x_size);
+    	dst[sram_idx][j] = src[dram_idx * MAT_AXI_RATIO + j];
+    }
+    loads += x_size;
     sram_idx += x_size;
     dram_idx += x_stride;
     reset_mem<DATA_T, MAT_AXI_RATIO>(sram_idx, x_pad_1, dst);
@@ -83,10 +95,18 @@ void load_2d(
   memop_stride_T x_stride) {
 #pragma HLS INLINE
 
-  for (int y = 0; y < y_size; y++) {
-    memcpy(&dst[sram_idx][0],
-           (const DATA_T*) &src[dram_idx * MAT_AXI_RATIO],
-           x_size * ELEM_BYTES);
+  loop_1: for (int y = 0; y < y_size; y++) {
+
+	dbprintf("set_directive_loop_tripcount -min %u -max %u load_2d/loop_1\n", y_size, y_size);
+    //memcpy(&dst[sram_idx][0],
+    //       (const DATA_T*) &src[dram_idx * MAT_AXI_RATIO],
+    //       x_size * ELEM_BYTES);
+	loop_2:for (int j = 0; j < x_size; j++) {
+		dbprintf("set_directive_loop_tripcount -min %u -max %u load_2d/loop_2\n", x_size, x_size);
+    	dst[sram_idx][j] = src[dram_idx * MAT_AXI_RATIO + j];
+    }
+    loads += x_size;
+
 #pragma HLS RESOURCE variable = sram_idx core = Mul_LUT
     sram_idx += x_size;
     dram_idx += x_stride;
@@ -143,6 +163,7 @@ PRAGMA_HLS(HLS INTERFACE s_axilite port = insn_count bundle = CONTROL_BUS offset
 #pragma HLS INTERFACE s_axilite port = return bundle = CONTROL_BUS
 
   INSN_DECODE: for (int pc = 0; pc < insn_count; pc++) {
+	dbprintf("set_directive_loop_tripcount -min %u -max %u fetch/INSN_DECODE\n", insn_count, insn_count);
 #pragma HLS PIPELINE
     // Read instruction fields
     insn_T raw_insn = insns[pc];
@@ -251,15 +272,19 @@ void gemm(
 
   // Outer Loop
   EXE_OUT_LOOP: for (int it_out = 0; it_out < insn.iter_out; it_out++) {
+    dbprintf("set_directive_loop_tripcount -min %u -max %u gemm/EXE_OUT_LOOP\n", insn.iter_out, insn.iter_out);
     acc_idx_T dst_offset_in = dst_offset_out;
     inp_idx_T src_offset_in = src_offset_out;
     wgt_idx_T wgt_offset_in = wgt_offset_out;
 
     // Inner Loop
     EXE_IN_LOOP: for (int it_in = 0; it_in < insn.iter_in; it_in++) {
-
+   	  dbprintf("set_directive_loop_tripcount -min %u -max %u gemm/EXE_IN_LOOP\n", insn.iter_in, insn.iter_in);
       // Iterate over micro op
       READ_GEMM_UOP: for (int upc = insn.uop_bgn; upc < insn.uop_end; upc++) {
+  		dbprintf("set_directive_loop_tripcount -min %u -max %u gemm/READ_GEMM_UOP\n", insn.uop_end, insn.uop_end);
+      	printf("DEBUG insn.iter_out = %u, insn.iter_in = %u, insn.uop_bgn = %u, insn.uop_end = %u\n", insn.iter_out, insn.iter_in, insn.uop_bgn ,insn.uop_end);
+  exit(0);
 #pragma HLS PIPELINE II = 1
         // Read micro-op fields
         uop_T uop = uop_mem[upc];
@@ -341,13 +366,16 @@ void alu(
 
   // Outer Loop
   EXE_OUT_LOOP: for (int it_out = 0; it_out < insn.iter_out; it_out++) {
+	dbprintf("set_directive_loop_tripcount -min %u -max %u alu/EXE_OUT_LOOP\n", insn.iter_out, insn.iter_out);
     acc_idx_T dst_offset_in = dst_offset_out;
     inp_idx_T src_offset_in = src_offset_out;
 
     // Inner Loop
     EXE_IN_LOOP: for (int it_in = 0; it_in < insn.iter_in; it_in++) {
+      dbprintf("set_directive_loop_tripcount -min %u -max %u alu/EXE_IN_LOOP\n", insn.iter_in, insn.iter_in);
       // Iterate over micro op
       READ_ALU_UOP: for (int upc = insn.uop_bgn; upc < insn.uop_end; upc++) {
+        dbprintf("set_directive_loop_tripcount -min %u -max %u alu/READ_ALU_UOP\n", insn.uop_end-insn.uop_bgn, insn.uop_end-insn.uop_bgn);
 #pragma HLS PIPELINE II = 2
         // Read micro-op fields
         uop_T uop = uop_mem[upc];
@@ -476,9 +504,13 @@ PRAGMA_HLS(HLS INTERFACE s_axilite port = done bundle = CONTROL_BUS offset = VTA
     memop_dram_T dram_idx = insn.mem.dram_base;
     if (insn.mem.memory_type == VTA_MEM_ID_UOP) {
       // Perform data transfer
-      memcpy(&uop_mem[sram_idx],
-             (const uop_T*) &uops[dram_idx],
-             insn.mem.x_size * sizeof(uop_T));
+      //memcpy(&uop_mem[sram_idx],
+      //       (const uop_T*) &uops[dram_idx],
+      //       insn.mem.x_size * sizeof(uop_T));
+    loop_1: for (int j = 0; j < insn.mem.x_size; j++) {
+    	dbprintf("set_directive_loop_tripcount -min %u -max %u compute/loop_1\n", insn.mem.x_size, insn.mem.x_size);
+    	uop_mem[sram_idx+j] = uops[dram_idx + j];
+      }
     } else if (insn.mem.memory_type == VTA_MEM_ID_ACC) {
       // Perform data transfer from DRAM
       load_2d<bus_T, ACC_MAT_AXI_RATIO, VTA_ACC_ELEM_BYTES>(
@@ -535,13 +567,21 @@ void store(
   memop_dram_T dram_idx = insn.dram_base;
 
   // Copy along y dimension
-  for (int y = 0; y < insn.y_size; y++) {
-#pragma HLS PIPELINE
+  loop_1: for (int y = 0; y < insn.y_size; y++) {
+	//printf("insn.y_size=%u", insn.y_size); exit(0);
+	dbprintf("set_directive_loop_tripcount -min %u -max %u store/loop_1\n", insn.y_size, insn.y_size);
+	#pragma HLS PIPELINE
     // Perform data transfer
-    memcpy(
-      const_cast<bus_T*>(&outputs[dram_idx * OUT_MAT_AXI_RATIO]),
-      (const bus_T*) &out_mem[sram_idx][0],
-      insn.x_size * VTA_OUT_ELEM_BYTES);
+    //memcpy(
+    //  const_cast<bus_T*>(&outputs[dram_idx * OUT_MAT_AXI_RATIO]),
+    //  (const bus_T*) &out_mem[sram_idx][0],
+    //  insn.x_size * VTA_OUT_ELEM_BYTES);
+	loop_2: for (int j = 0; j < insn.x_size; j++) {
+    	dbprintf("set_directive_loop_tripcount -min %u -max %u store/loop_2\n", insn.x_size, insn.x_size);
+  	    //printf("insn.x_size=%u", insn.x_size); exit(0);
+    	outputs[dram_idx * OUT_MAT_AXI_RATIO+j] = out_mem[sram_idx][j];
+    }
+    stores += insn.x_size;
 #pragma HLS RESOURCE variable = sram_idx core = Mul_LUT
     sram_idx += insn.x_size;
     dram_idx += insn.x_stride;
@@ -619,7 +659,9 @@ void vta(
   int exit_counter = 0;
 
   // Main control loop
-  while (true) {
+  //while (true) {
+  for (int i=1; i < 100; i++) {
+	  printf("DEBUG: i=%d\n", i);
     // First execute as many load instructions as possible
     while (!tmp_load_queue.empty() || tmp_load_popped == true) {
       // Pop the load instruction
@@ -690,6 +732,8 @@ void vta(
         break;
       }
     }
+    printf("DEBUG - LOADs=%d, STOREs=%d\n", loads, stores);
+
     // Check if we get a signal that we are done
     if (done) {
       break;

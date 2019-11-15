@@ -202,14 +202,14 @@ tuning_option = {
     'log_filename': log_file,
 
     'tuner': 'gridsearch',
-    'n_trial': 20,
+    'n_trial': 1,
     'early_stopping': None,
 
     'measure_option': autotvm.measure_option(
         builder=autotvm.LocalBuilder(),
         runner=autotvm.RPCRunner(
             env.TARGET, host=tracker_host, port=tracker_port,
-            number=5,
+            number=2,
             timeout=60,
             check_correctness=True
         ),
@@ -385,8 +385,8 @@ def tune_and_evaluate(tuning_opt):
     #return
 
     # run tuning tasks
-    #print("Tuning...")
-    #tune_tasks(tasks, **tuning_opt)
+    print("Tuning...")
+    tune_tasks(tasks, **tuning_opt)
 
     # compile kernels with history best records
     #with autotvm.tophub.context(target, extra_files=[log_file]):

@@ -36,7 +36,7 @@ int main(void) {
 #endif
 
     int status = 0;
-
+/*
     // Run ALU test (vector-scalar operators)
     status |= alu_test(VTA_ALU_OPCODE_MIN, true, VTA_BLOCK_OUT, 128, true);
     status |= alu_test(VTA_ALU_OPCODE_MIN, true, VTA_BLOCK_OUT, 128, false);
@@ -59,10 +59,12 @@ int main(void) {
 
     // Run blocked GEMM test
     status |= blocked_gemm_test(256, 256, VTA_BLOCK_OUT*4, false, 2);
-    status |= blocked_gemm_test(256, 256, VTA_BLOCK_OUT*4, false, 1);
+*/
+    status |= alu_test(VTA_ALU_OPCODE_MIN, false, VTA_BLOCK_OUT, 128, true);
+    status |= blocked_gemm_test(32, 32, VTA_BLOCK_OUT, false, 1);
 
     // Simple GEMM unit test
-    status |= gemm_test(4 * VTA_BATCH, 4 * VTA_BLOCK_OUT, 4 * VTA_BLOCK_IN, false);
+//    status |= gemm_test(4 * VTA_BATCH, 4 * VTA_BLOCK_OUT, 4 * VTA_BLOCK_IN, false);
 
     return status;
 }

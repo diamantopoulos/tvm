@@ -31,6 +31,9 @@
 
 #include <vta/hw_spec.h>
 
+//#define DEBUG 1
+#define VTA_DEBUG 1
+
 /*!
 * Define HLS stream depth 
 */
@@ -229,5 +232,21 @@ void vta(
   volatile bus_T *weights,
   volatile bus_T *biases,
   volatile bus_T *outputs);
+
+
+/*!
+ * \brief Debug option for HCCS. Values: 0,1
+ */
+#define HCCS_DEBUG 1
+
+/*!
+ * \brief Overload printf with dbprintf that conforms to HCCS_DEBUG o
+ */
+#if defined(HCCS_DEBUG) && HCCS_DEBUG > 0 && !defined(__SYNTHESIS__)
+ #define dbprintf(fmt, args...) fprintf(stdout, "DEBUG: %s:%d:%s(): " fmt, \
+    __FILE__, __LINE__, __func__, ##args)
+#else
+ #define dbprintf(fmt, args...) /* Don't do anything in release builds */
+#endif
 
 #endif  // VTA_VTA_H_
