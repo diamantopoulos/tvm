@@ -197,7 +197,7 @@ if (LOAD_SESSION == 1):
     [labels, confMat, mat_acc_min, mat_acc_max, [total_bits, frac_bits], mat_brams, mat_dsps, mat_ffs, mat_luts] = np.load(savesessionfile)
 
 else:
-    RUN_SYN  = True
+    RUN_SYN  = False
     RUN_EVAL = True
     EVALUATION = "TUNE"
 
@@ -226,8 +226,10 @@ else:
     logfd.write(line)
     logfd.close()
 
-    VIV_FREQ_list = [100, 142, 167, 200]
-    HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 6.6, 6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 8, 8.5, 9, 9.5, 10]
+    #VIV_FREQ_list = [100, 142, 167, 200]
+    #HLS_CLK_list = [1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 6.6, 6.7, 6.8, 6.9, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 8, 8.5, 9, 9.5, 10]
+    VIV_FREQ_list = [100]
+    HLS_CLK_list = [7.1]
 
     sstring_HLSCLK = "self.fpga_per = "
     rstring_HLSCLK = "self.fpga_per = "

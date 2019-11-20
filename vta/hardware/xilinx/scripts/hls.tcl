@@ -91,9 +91,9 @@ add_files -tb $sim_dir/vta_test.cc -cflags $cflags
 add_files -tb $test_dir/test_lib.cc -cflags $cflags
 open_solution "soln"
 init_design
-#csim_design -clean
+csim_design -clean
 csynth_design
-cosim_design -rtl vhdl -tool xsim -trace_level all
+#cosim_design -rtl verilog -tool xsim -trace_level all
 close_project
 
 exit

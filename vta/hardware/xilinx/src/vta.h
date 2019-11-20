@@ -33,6 +33,7 @@
 
 //#define DEBUG 1
 #define VTA_DEBUG 1
+#define USE_MEMCPY 1
 
 /*!
 * Define HLS stream depth 
