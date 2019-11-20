@@ -40,14 +40,16 @@ def parse_hls_log(report_file):
 
 
 tvm_root = os.environ.get("TVM_HOME")
-vta_config = "pynq_1x16_i8w8a32_15_15_18_17"
+vta_config = "pynq_1x16_*"
 
 filein = tvm_root + "/vta/python/vta/pkg_config.py"
 fileout = tvm_root + "/vta/python/vta/pkg_config_replaced.py"
-pynq_report_hls_in = tvm_root + "/vta/build/hardware/xilinx/hls/" + vta_config + "/vta_sim/soln/syn/report/compute_csynth.rpt"
+vta_csynth_rpt = tvm_root + "/vta/build/hardware/xilinx/hls/" + vta_config + "/vta_sim/soln/syn/report/vta_csynth.rpt"
+compute_csynth_rpt = tvm_root + "/vta/build/hardware/xilinx/hls/" + vta_config + "/vta_sim/soln/syn/report/compute_csynth.rpt"
 
 
-[estimated, brams, dsps, ffs, luts] = parse_hls_log(pynq_report_hls_in)
+[estimated, brams, dsps, ffs, luts] = parse_hls_log(vta_csynth_rpt)
+[estimatedc, bramsc, dspsc, ffsc, lutsc] = parse_hls_log(compute_csynth_rpt)
 
 line = estimated + "\t" + brams + "\t" + dsps + "\t" + ffs + "\t" + luts + "\n"
 
