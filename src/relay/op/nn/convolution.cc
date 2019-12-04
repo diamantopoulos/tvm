@@ -18,7 +18,6 @@
  */
 
 /*!
- *  Copyright (c) 2018 by Contributors
  * \file convolution.cc
  * \brief Convolution operators
  */
@@ -106,6 +105,64 @@ with the layer input to produce a tensor of outputs.
 .set_support_level(2)
 .add_type_rel("Conv2D", Conv2DRel<Conv2DAttrs>)
 .set_attr<FInferCorrectLayout>("FInferCorrectLayout", Conv2DInferCorrectLayout<Conv2DAttrs>);
+
+// relay.nn.conv3d
+TVM_REGISTER_NODE_TYPE(Conv3DAttrs);
+
+// Positional relay function to create conv3d operator
+// used by frontend FFI.
+Expr MakeConv3D(Expr data,
+                Expr weight,
+                Array<IndexExpr> strides,
+                Array<IndexExpr> padding,
+                Array<IndexExpr> dilation,
+                int groups,
+                IndexExpr channels,
+                Array<IndexExpr> kernel_size,
+                std::string data_layout,
+                std::string kernel_layout,
+                std::string out_layout,
+                DataType out_dtype) {
+  auto attrs = make_node<Conv3DAttrs>();
+  attrs->strides = std::move(strides);
+  attrs->padding = std::move(padding);
+  attrs->dilation = std::move(dilation);
+  attrs->groups = groups;
+  attrs->channels = std::move(channels);
+  attrs->kernel_size = std::move(kernel_size);
+  attrs->data_layout = std::move(data_layout);
+  attrs->kernel_layout = std::move(kernel_layout);
+  attrs->out_layout = std::move(out_layout);
+  attrs->out_dtype = std::move(out_dtype);
+  static const Op& op = Op::Get("nn.conv3d");
+  return CallNode::make(op, {data, weight}, Attrs(attrs), {});
+}
+
+
+TVM_REGISTER_API("relay.op.nn._make.conv3d")
+.set_body_typed(MakeConv3D);
+
+
+RELAY_REGISTER_OP("nn.conv3d")
+.describe(R"code(3D convolution layer (e.g. convolution over 3D image data,
+like Magnetic Resonance Imaging (MRI) data in medicine).
+
+This layer creates a convolution kernel that is convolved
+with the layer input to produce a tensor of outputs.
+
+- **data**: This depends on the `layout` parameter. Input is 5D array of shape
+            (batch_size, in_channels, depth, height, width) if `layout` is `NCDHW`.
+- **weight**: (channels, in_channels, kernel_size[0], kernel_size[1], kernel_size[2])
+- **out**:  This depends on the `layout` parameter. Output is 5D array of shape
+            (batch_size, channels, out_depth, out_height, out_width) if `layout` is `NCDHW`.
+
+)code" TVM_ADD_FILELINE)
+.set_attrs_type<Conv3DAttrs>()
+.set_num_inputs(2)
+.add_argument("data", "Tensor", "The input tensor.")
+.add_argument("weight", "Tensor", "The weight tensor.")
+.set_support_level(2)
+.add_type_rel("Conv3D", Conv3DRel<Conv3DAttrs>);
 
 
 // relay.nn.conv2d_transpose
@@ -330,8 +387,19 @@ bool Conv2DWinogradRel(const Array<Type>& types,
   // dilation
   Array<IndexExpr> oshape({dshape_nchw[0], channels, 0, 0});
 
-  oshape.Set(2, (dshape_nchw[2] + param->padding[0] * 2 - dilated_ksize_y) / param->strides[0] + 1);
-  oshape.Set(3, (dshape_nchw[3] + param->padding[1] * 2 - dilated_ksize_x) / param->strides[1] + 1);
+  if (!dshape_nchw[2].as<ir::Any>()) {
+    oshape.Set(2, (dshape_nchw[2] + param->padding[0] * 2
+                   - dilated_ksize_y) / param->strides[0] + 1);
+  } else {
+    oshape.Set(2, dshape_nchw[2]);
+  }
+  if (!dshape_nchw[3].as<ir::Any>()) {
+    oshape.Set(3, (dshape_nchw[3] + param->padding[1] * 2
+                   - dilated_ksize_x) / param->strides[1] + 1);
+  } else {
+    oshape.Set(3, dshape_nchw[3]);
+  }
+
   DataType out_dtype = param->out_dtype;
   if (out_dtype.bits() == 0) {
     out_dtype = data->dtype;
